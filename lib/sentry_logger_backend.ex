@@ -1,7 +1,9 @@
 defmodule SentryLoggerBackend do
   @moduledoc """
     Provides a `Logger` backend for Sentry. This will automatically
-    submit Error level Logger events to Sentry.
+    submit Error level Logger events to Sentry. This backend doesn't
+    capture otp_crash messages. Instead Sentry.LoggerBackend should
+    be used. 
 
     ### Configuration
     Simply add the following to your config:
@@ -41,24 +43,17 @@ defmodule SentryLoggerBackend do
         {level, _, {Logger, msg, _timestamp, metadata}},
         state = %{level: min_level, fingerprint_callback: fingerprint_callback}
       ) do
-    if meet_level?(level, min_level) && !metadata[:skip_sentry] do
-      msg = to_string(msg)
+    msg = to_string(msg)
+    if meet_level?(level, min_level) && !metadata[:skip_sentry] && !is_otp_crash(msg) do
       {fingerprint_meta, remaining} = Keyword.pop(metadata, :fingerprint)
       fingerprint = fingerprint_callback.(fingerprint_meta, msg)
 
       opts =
-        case {is_otp_crash(msg), {fingerprint, remaining}} do
-          {false, {nil, remaining}} ->
+        case {fingerprint, remaining} do
+          {nil, remaining}} ->
             [level: normalise_level(level), extra: process_metadata(remaining)]
 
-          {true, {nil, remaining}} ->
-            [
-              level: normalise_level(level),
-              fingerprint: extract_fingerprint_from_otp_crash(msg),
-              extra: process_metadata(remaining)
-            ]
-
-          {_, {fingerprint, remaining}} ->
+          {fingerprint, remaining} ->
             [
               level: normalise_level(level),
               fingerprint: Enum.map(fingerprint, &to_string/1),
