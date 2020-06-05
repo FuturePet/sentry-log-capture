@@ -1,27 +1,27 @@
-# SentryLoggerBackend
+# SentryLogCapture
 
 Provides a `Logger` backend for Sentry, to automatically submit Logger events above a configurable threshold to Sentry
 
 ## Installation
 
-1. Add `sentry_logger_backend` to your list of dependencies in `mix.exs`:
+1. Add `sentry_log_capture` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:sentry_logger_backend, "~> 0.1.0"}]
+  [{:sentry_log_capture, "~> 0.1.0"}]
 end
 ```
 
-2. Add SentryLoggerBackend to the list of logger backends in your config, e.g.
+2. Add SentryLogCapture to the list of logger backends in your config, e.g.
 
 ```elixir
-config :logger, backends: [:console, SentryLoggerBackend]
+config :logger, backends: [:console, SentryLogCapture]
 ```
 
 3. Set the level threshold (defaults to :error - but see warning below):
 
 ```elixir
-config :logger, SentryLoggerBackend, level: :error
+config :logger, SentryLogCapture, level: :error
 ```
 
 ## Fingerprints
