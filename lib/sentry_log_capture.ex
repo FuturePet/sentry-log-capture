@@ -44,8 +44,6 @@ defmodule SentryLogCapture do
         state = %{level: min_level, fingerprint_callback: fingerprint_callback}
       ) do
     msg = to_string(msg)
-    IO.inspect(metadata)
-    IO.inspect(is_otp_crash(metadata))
 
     if meet_level?(level, min_level) && !metadata[:skip_sentry] && !is_otp_crash(metadata) do
       {fingerprint_meta, remaining} = Keyword.pop(metadata, :fingerprint)
