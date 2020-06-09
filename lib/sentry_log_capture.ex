@@ -45,7 +45,7 @@ defmodule SentryLogCapture do
       ) do
     msg = to_string(msg)
 
-    if meet_level?(level, min_level) && !metadata[:skip_sentry] && !is_otp_crash(msg) do
+    if meet_level?(level, min_level) && !metadata[:skip_sentry] && !is_otp_crash(metadata) do
       {fingerprint_meta, remaining} = Keyword.pop(metadata, :fingerprint)
       fingerprint = fingerprint_callback.(fingerprint_meta, msg)
 
@@ -99,12 +99,14 @@ defmodule SentryLogCapture do
     Logger.compare_levels(lvl, min) != :lt
   end
 
-  defp is_otp_crash(msg) do
-    String.starts_with?(msg, "Error in process")
-  end
+  defp is_otp_crash(metadata) do
+    case {Keyword.get(metadata, :domain), Keyword.get(metadata, :crash_reason)} do
+      {domain, crash_reason} when not is_nil(domain) and not is_nil(crash_reason) ->
+        Enum.any?(domain, &(&1 == :otp))
 
-  defp extract_fingerprint_from_otp_crash(msg) do
-    Regex.run(~r/file: [^\]]*/, msg)
+      _ ->
+        false
+    end
   end
 
   # Avoid quote marks around string vals, but otherwise inspect
