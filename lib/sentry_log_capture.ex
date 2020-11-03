@@ -40,12 +40,13 @@ defmodule SentryLogCapture do
   end
 
   def handle_event(
-        {level, _, {Logger, msg, _timestamp, metadata}},
+        {level, _, {Logger, msg, _timestamp, metadata} = message},
         state = %{level: min_level, fingerprint_callback: fingerprint_callback}
       ) do
     msg = to_string(msg)
 
-    if meet_level?(level, min_level) && !metadata[:skip_sentry] && !is_otp_crash(metadata) do
+    if meet_level?(level, min_level) && !metadata[:skip_sentry] && !is_otp_crash(metadata) &&
+         !exclude_exception?(message) do
       {fingerprint_meta, remaining} = Keyword.pop(metadata, :fingerprint)
       fingerprint = fingerprint_callback.(fingerprint_meta, msg)
 
@@ -116,4 +117,11 @@ defmodule SentryLogCapture do
   # Sentry doesn't understand :warn
   defp normalise_level(:warn), do: :warning
   defp normalise_level(other), do: other
+
+  defp exclude_exception?(message) do
+    case Application.get_env(:sentry, :filter) do
+      nil -> false
+      mod -> apply(mod, :exclude_exception?, [message, :logger])
+    end
+  end
 end
