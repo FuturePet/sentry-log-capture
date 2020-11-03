@@ -4,7 +4,7 @@ defmodule SentryLogCapture.Mixfile do
   def project do
     [
       app: :sentry_log_capture,
-      version: "0.1.6",
+      version: "0.0.3",
       elixir: "~> 1.2",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
