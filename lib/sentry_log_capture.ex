@@ -53,13 +53,22 @@ defmodule SentryLogCapture do
       opts =
         case {fingerprint, remaining} do
           {nil, remaining} ->
-            [level: normalise_level(level), extra: process_metadata(remaining)]
+            rest_of_opts = process_metadata(remaining)
+            [{:level, normalise_level(level)} | rest_of_opts]
 
           {fingerprint, remaining} ->
+            rest_of_opts = process_metadata(remaining)
+
             [
-              level: normalise_level(level),
-              fingerprint: Enum.map(fingerprint, &to_string/1),
-              extra: process_metadata(remaining)
+              {
+                :level,
+                normalise_level(level)
+              },
+              {
+                :fingerprint,
+                Enum.map(fingerprint, &to_string/1)
+              }
+              | rest_of_opts
             ]
         end
 
@@ -91,9 +100,16 @@ defmodule SentryLogCapture do
   end
 
   defp process_metadata(metadata) do
-    metadata
-    |> Enum.map(&stringify_values/1)
-    |> Enum.into(Map.new())
+    tags =
+      Keyword.get(metadata, :tags, []) |> Enum.map(&stringify_values/1) |> Enum.into(Map.new())
+
+    extras =
+      metadata
+      |> Keyword.delete(:tags)
+      |> Enum.map(&stringify_values/1)
+      |> Enum.into(Map.new())
+
+    [tags: tags, extras: extras]
   end
 
   defp meet_level?(lvl, min) do
