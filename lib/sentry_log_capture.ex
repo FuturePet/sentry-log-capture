@@ -103,13 +103,13 @@ defmodule SentryLogCapture do
     tags =
       Keyword.get(metadata, :tags, []) |> Enum.map(&stringify_values/1) |> Enum.into(Map.new())
 
-    extras =
+    extra =
       metadata
       |> Keyword.delete(:tags)
       |> Enum.map(&stringify_values/1)
       |> Enum.into(Map.new())
 
-    [tags: tags, extras: extras]
+    [tags: tags, extra: extra]
   end
 
   defp meet_level?(lvl, min) do
